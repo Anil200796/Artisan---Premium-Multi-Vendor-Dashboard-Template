@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light"> <!-- Default theme is light -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Vendor Dashboard - Artisan Marketplace</title>
+
+    <!-- Frameworks & Libraries CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Premium Custom CSS with Dark Mode Variables -->
+    <style>
+        :root {
+            --primary-color: #4f46e5; --primary-hover: #4338ca;
+            --sidebar-bg: #111827; --sidebar-text: #9ca3af;
+            --sidebar-active-bg: linear-gradient(90deg, rgba(79, 70, 229, 0.2), transparent);
+            --sidebar-active-text: #ffffff;
+            /* Light Mode Colors */
+            --main-bg: #f9fafb; --card-bg: #ffffff; --card-border: #e5e7eb;
+            --text-headings: #111827; --text-body: #374151; --text-muted: #6b7280;
+        }
+
+        /* Dark Mode Color Overrides */
+        [data-bs-theme="dark"] {
+            --main-bg: #111827; --card-bg: #1f2937; --card-border: #374151;
+            --text-headings: #f9fafb; --text-body: #d1d5db; --text-muted: #9ca3af;
+            --bs-light-bg-subtle: #374151; --bs-light: #1f2937;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--main-bg); color: var(--text-body); transition: background-color 0.3s ease, color 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background-color: var(--sidebar-bg); transition: transform 0.3s ease-in-out; z-index: 1030; }
+        .main-content { margin-left: 260px; padding: 30px; transition: margin-left 0.3s ease-in-out; }
+        .sidebar .logo-wrapper { padding: 20px; text-align: center; }
+        .sidebar .logo-wrapper .logo { font-size: 1.5rem; font-weight: 700; color: var(--sidebar-active-text); text-decoration: none; }
+        .sidebar-nav { padding: 0 15px; }
+        .sidebar .nav-category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; color: #6b7280; padding: 25px 10px 10px; }
+        .sidebar .nav-link { color: var(--sidebar-text); font-weight: 500; padding: 12px 15px; border-radius: 8px; margin-bottom: 5px; display: flex; align-items: center; transition: all 0.2s ease; border-left: 3px solid transparent; }
+        .sidebar .nav-link:hover { background-color: rgba(255,255,255,0.05); color: var(--sidebar-active-text); }
+        .sidebar .nav-link.active { background: var(--sidebar-active-bg); color: var(--sidebar-active-text); border-left-color: var(--primary-color); }
+        .sidebar .nav-link .bi { margin-right: 15px; font-size: 1.1em; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .page-header h1 { font-weight: 700; color: var(--text-headings); }
+        .page-content { display: none; }
+        .page-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { border: 1px solid var(--card-border); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05); background-color: var(--card-bg); transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); transition: all 0.2s ease; }
+        .btn-primary:hover { background-color: var(--primary-hover); border-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .premium-kpi-card .card-body { display: flex; align-items: center; }
+        .premium-kpi-card .icon-wrapper { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 50%; margin-right: 15px; }
+        .premium-kpi-card .icon-wrapper i { font-size: 1.5rem; }
+        .product-card { transition: all 0.2s ease; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1); }
+        .theme-toggle .bi-sun-fill { display: none; }
+        .theme-toggle .bi-moon-stars-fill { display: block; }
+        [data-bs-theme="dark"] .theme-toggle .bi-sun-fill { display: block; }
+        [data-bs-theme="dark"] .theme-toggle .bi-moon-stars-fill { display: none; }
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-260px); }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="d-flex">
+        <!-- =============================================== PREMIUM SIDEBAR =============================================== -->
+        <nav class="sidebar">
+            <div class="logo-wrapper"><a href="#" class="logo">Artisan</a></div>
+            <div class="sidebar-nav">
+                <div class="nav-category">Menu</div>
+                <a class="nav-link active" href="#" data-page="analytics"><i class="bi bi-bar-chart-line-fill"></i>Analytics</a>
+                <a class="nav-link" href="#" data-page="products"><i class="bi bi-grid-1x2-fill"></i>Products</a>
+                <a class="nav-link" href="#" data-page="orders"><i class="bi bi-box-seam-fill"></i>Orders</a>
+                <a class="nav-link" href="#" data-page="finance"><i class="bi bi-wallet-fill"></i>Finance</a>
+                <a class="nav-link" href="#" data-page="reviews"><i class="bi bi-star-fill"></i>Reviews</a>
+                <div class="nav-category">Tools</div>
+                <a class="nav-link" href="#" data-page="messages"><i class="bi bi-chat-left-text-fill"></i>Messages<span class="badge bg-danger ms-auto">5</span></a>
+                <a class="nav-link" href="#" data-page="coupons"><i class="bi bi-ticket-percent-fill"></i>Coupons</a>
+                <a class="nav-link" href="#" data-page="marketing"><i class="bi bi-megaphone-fill"></i>Marketing</a>
+                <div class="nav-category">Account</div>
+                <a class="nav-link" href="#" data-page="settings"><i class="bi bi-gear-fill"></i>Settings</a>
+                <a class="nav-link" href="#" data-page="help"><i class="bi bi-question-circle-fill"></i>Help Center</a>
+            </div>
+        </nav>
+
+        <!-- =============================================== PREMIUM MAIN CONTENT =============================================== -->
+        <main class="main-content">
+            <header class="page-header">
+                <button class="btn d-lg-none" type="button" id="sidebar-toggle"><i class="bi bi-list fs-2"></i></button>
+                <div class="ms-2 ms-lg-0"><h1 id="page-title">Dashboard</h1><p class="mb-0" id="page-subtitle" style="color: var(--text-muted);">Welcome back, Brian! Here's your performance overview.</p></div>
+                <div class="d-flex align-items-center"><div class="input-group me-3 d-none d-lg-flex"><span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span><input type="text" class="form-control border-start-0" placeholder="Search..."></div><button class="btn btn-light me-2"><i class="bi bi-bell"></i></button>
+                    <div class="dropdown me-2">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="currency-selector-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                            ₹ INR
+                        </button>
+                        <ul class="dropdown-menu" id="currency-selector-menu">
+                            <li><a class="dropdown-item" href="#" data-currency="INR">₹ INR</a></li>
+                            <li><a class="dropdown-item" href="#" data-currency="USD">$ USD</a></li>
+                            <li><a class="dropdown-item" href="#" data-currency="EUR">€ EUR</a></li>
+                            <li><a class="dropdown-item" href="#" data-currency="GBP">£ GBP</a></li>
+                        </ul>
+                    </div>
+                    <button class="btn btn-outline-secondary me-2 theme-toggle" id="theme-toggle" title="Toggle Theme"><i class="bi bi-sun-fill"></i><i class="bi bi-moon-stars-fill"></i></button><img src="https://i.pravatar.cc/40?u=brian" class="rounded-circle" alt="user"></div>
+            </header>
+
+            <!-- ===================== PAGE: ANALYTICS ===================== -->
+            <div id="page-analytics" class="page-content active">
+                <div class="row g-4">
+                    <div class="col-sm-6 col-xl-3"><div class="card premium-kpi-card"><div class="card-body"><div class="icon-wrapper bg-success-subtle text-success"><i class="bi bi-cash-stack"></i></div><div><p class="mb-0" style="color: var(--text-muted);">Total Revenue</p><h4 class="fw-bold formatted-currency" data-value="42550" style="color: var(--text-headings);"></h4></div></div></div></div>
+                    <div class="col-sm-6 col-xl-3"><div class="card premium-kpi-card"><div class="card-body"><div class="icon-wrapper bg-primary-subtle text-primary"><i class="bi bi-box-seam"></i></div><div><p class="mb-0" style="color: var(--text-muted);">Orders</p><h4 class="fw-bold" style="color: var(--text-headings);">152</h4></div></div></div></div>
+                    <div class="col-sm-6 col-xl-3"><div class="card premium-kpi-card"><div class="card-body"><div class="icon-wrapper bg-info-subtle text-info"><i class="bi bi-graph-up-arrow"></i></div><div><p class="mb-0" style="color: var(--text-muted);">Conversion</p><h4 class="fw-bold" style="color: var(--text-headings);">3.1%</h4></div></div></div></div>
+                    <div class="col-sm-6 col-xl-3"><div class="card premium-kpi-card"><div class="card-body"><div class="icon-wrapper bg-warning-subtle text-warning"><i class="bi bi-people"></i></div><div><p class="mb-0" style="color: var(--text-muted);">New Customers</p><h4 class="fw-bold" style="color: var(--text-headings);">72</h4></div></div></div></div>
+                    <div class="col-12"><div class="card"><div class="card-body"><h5 class="card-title" style="color: var(--text-headings);">Sales Performance</h5><div style="height: 350px;"><canvas id="salesChart"></canvas></div></div></div></div>
+                </div>
+            </div>
+
+            <!-- ===================== PAGE: PRODUCTS ===================== -->
+            <div id="page-products" class="page-content">
+                <div class="d-flex justify-content-between align-items-center mb-4"><div><select class="form-select w-auto"><option>All Categories</option></select></div><button class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Product</button></div>
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-4 col-xl-3"><div class="card h-100 product-card"><img src="https://images.unsplash.com/photo-1576020938689-c444c131316b?q=80&w=400" class="card-img-top" alt="Product"><div class="card-body"><h5 class="card-title">Hand-Painted Mug</h5><p class="card-text">A beautiful mug, perfect for your morning coffee.</p></div><div class="card-footer bg-transparent d-flex justify-content-between align-items-center"><span class="fw-bold fs-5 text-primary formatted-currency" data-value="800"></span><span class="badge bg-success-subtle text-success-emphasis">15 in stock</span></div></div></div>
+                    <div class="col-md-6 col-lg-4 col-xl-3"><div class="card h-100 product-card"><img src="https://images.unsplash.com/photo-1618221373974-878534438343?q=80&w=400" class="card-img-top" alt="Product"><div class="card-body"><h5 class="card-title">Woven Wall Hanging</h5><p class="card-text">Bohemian style wall decor for any room.</p></div><div class="card-footer bg-transparent d-flex justify-content-between align-items-center"><span class="fw-bold fs-5 text-primary formatted-currency" data-value="2500"></span><span class="badge bg-warning-subtle text-warning-emphasis">Made to Order</span></div></div></div>
+                </div>
+            </div>
+            
+            <!-- ===================== PAGE: ORDERS ===================== -->
+            <div id="page-orders" class="page-content">
+                 <div class="card"><div class="card-body"><table id="ordersTable" class="table table-borderless" style="width:100%"><thead><tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr class="shadow-sm mb-3"><td>#1138</td><td>Anjali Sharma</td><td>2024-08-01</td><td class="formatted-currency" data-value="1250"></td><td><span class="badge rounded-pill bg-success-subtle text-success-emphasis">Shipped</span></td><td><button class="btn btn-sm btn-light"><i class="bi bi-eye"></i></button></td></tr><tr class="shadow-sm mb-3"><td>#1137</td><td>Rohan Verma</td><td>2024-07-31</td><td class="formatted-currency" data-value="800"></td><td><span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Processing</span></td><td><button class="btn btn-sm btn-light"><i class="bi bi-eye"></i></button></td></tr><tr class="shadow-sm mb-3"><td>#1136</td><td>Priya Singh</td><td>2024-07-30</td><td class="formatted-currency" data-value="2500"></td><td><span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">New</span></td><td><button class="btn btn-sm btn-light"><i class="bi bi-eye"></i></button></td></tr></tbody></table></div></div>
+            </div>
+
+            <!-- ===================== PAGE: FINANCE ===================== -->
+            <div id="page-finance" class="page-content">
+                 <div class="row g-4 mb-4">
+                    <div class="col-md-4"><div class="card text-center"><div class="card-body"><h5 class="card-title">Available for Payout</h5><p class="display-5 fw-bold text-success formatted-currency" data-value="15200"></p><button class="btn btn-success">Withdraw Funds</button></div></div></div>
+                    <div class="col-md-4"><div class="card text-center"><div class="card-body"><h5 class="card-title">Pending Clearance</h5><p class="display-5 fw-bold formatted-currency" data-value="4500"></p><small>Clears in 3-5 days</small></div></div></div>
+                    <div class="col-md-4"><div class="card text-center"><div class="card-body"><h5 class="card-title">Last Payout</h5><p class="display-5 fw-bold formatted-currency" data-value="10000"></p><small>On 25th July, 2024</small></div></div></div>
+                </div>
+                <div class="card"><div class="card-body"><h5 class="card-title">Transaction History</h5><table id="financeTable" class="table"><thead><tr><th>Date</th><th>Type</th><th>Details</th><th>Amount</th><th>Balance</th></tr></thead><tbody><tr><td>Aug 1, 2024</td><td><span class="badge bg-success-subtle text-success-emphasis">Sale</span></td><td>Order #1138</td><td class="text-success formatted-currency-plus" data-value="1250"></td><td class="formatted-currency" data-value="15200"></td></tr><tr><td>Jul 28, 2024</td><td><span class="badge bg-primary-subtle text-primary-emphasis">Payout</span></td><td>Withdrawal to Bank</td><td class="text-danger formatted-currency-minus" data-value="10000"></td><td class="formatted-currency" data-value="13950"></td></tr><tr><td>Jul 27, 2024</td><td><span class="badge bg-danger-subtle text-danger-emphasis">Fee</span></td><td>Platform Fee for July</td><td class="text-danger formatted-currency-minus" data-value="2500"></td><td class="formatted-currency" data-value="23950"></td></tr></tbody></table></div></div>
+            </div>
+            
+            <!-- ===================== PAGE: REVIEWS ===================== -->
+            <div id="page-reviews" class="page-content">
+                <div class="card"><div class="card-body"><ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0"><div class="d-flex w-100 justify-content-between"><div><h5>Excellent Quality!</h5><p class="mb-1">The mug was even more beautiful in person. Packaged securely.</p><small>By Rohan Verma on "Hand-Painted Mug"</small></div><div class="text-nowrap"><i class="bi bi-star-fill text-warning"></i><i class="bi bi-star-fill text-warning"></i><i class="bi bi-star-fill text-warning"></i><i class="bi bi-star-fill text-warning"></i><i class="bi bi-star-fill text-warning"></i></div></div><button class="btn btn-sm btn-light mt-2">Reply</button></li>
+                    <li class="list-group-item px-0"><div class="d-flex w-100 justify-content-between"><div><h5>Good, but smaller than expected.</h5><p class="mb-1">The wall hanging is very nice, but I thought it would be larger.</p><small>By Meera Patel on "Woven Wall Hanging"</small></div><div class="text-nowrap"><i class="bi bi-star-fill text-warning"></i><i class="bi bi-star-fill text-warning"></i><i class="bi bi-star-fill text-warning"></i><i class="bi bi-star text-warning"></i><i class="bi bi-star text-warning"></i></div></div><div class="p-3 mt-2 bg-light rounded"><p class="mb-1"><strong>Your reply:</strong></p><p class="mb-0">Thanks for the feedback, Meera! We've updated the description with clearer dimensions to help future customers.</p></div></li>
+                </ul></div></div>
+            </div>
+
+            <!-- ===================== PAGE: MESSAGES ===================== -->
+            <div id="page-messages" class="page-content">
+                <div class="card"><div class="row g-0 vh-75"><div class="col-md-4 border-end">
+                    <div class="list-group list-group-flush p-2">
+                        <a href="#" class="list-group-item list-group-item-action active"><div><div class="d-flex w-100 justify-content-between"><h6>Anjali Sharma</h6><small>1 day ago</small></div><p class="mb-1">Query about Order #1138</p></div></a>
+                        <a href="#" class="list-group-item list-group-item-action"><div><div class="d-flex w-100 justify-content-between"><h6>Preeti Desai</h6><small>3 days ago</small></div><p class="mb-1">Can you make a custom design?</p></div></a>
+                    </div>
+                </div><div class="col-md-8"><div class="d-flex flex-column h-100 p-3">
+                    <div class="flex-grow-1 mb-3"> <!-- Chat messages -->
+                        <div class="d-flex flex-row justify-content-start mb-3"><img src="https://i.pravatar.cc/40?u=anjali" class="rounded-circle me-2" style="width: 40px; height: 40px;"><div class="p-3 bg-light rounded-3">Hi! When will my order be shipped?</div></div>
+                        <div class="d-flex flex-row justify-content-end mb-3"><div class="p-3 bg-primary text-white rounded-3">Hello Anjali! Your order #1138 has been shipped today. You should receive the tracking details shortly.</div></div>
+                    </div>
+                    <div class="input-group"><input type="text" class="form-control" placeholder="Type a message..."><button class="btn btn-primary">Send</button></div>
+                </div></div></div></div>
+            </div>
+
+            <!-- ===================== PAGE: COUPONS ===================== -->
+            <div id="page-coupons" class="page-content">
+                 <div class="d-flex justify-content-end mb-4"><button class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Create Coupon</button></div>
+                 <div class="card"><div class="card-body"><table class="table"><thead><tr><th>Code</th><th>Type</th><th>Discount</th><th>Usage</th><th>Status</th></tr></thead><tbody><tr><td>WELCOME10</td><td>Percentage</td><td>10%</td><td>5/100</td><td><span class="badge rounded-pill bg-success-subtle text-success-emphasis">Active</span></td></tr><tr><td>DIWALI2023</td><td>Fixed Amount</td><td class="formatted-currency" data-value="200"></td><td>50/50</td><td><span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">Expired</span></td></tr></tbody></table></div></div>
+            </div>
+
+            <!-- ===================== PAGE: MARKETING ===================== -->
+            <div id="page-marketing" class="page-content">
+                 <div class="row g-4">
+                     <div class="col-md-6"><div class="card h-100 product-card"><div class="card-body text-center"><i class="bi bi-instagram fs-1" style="color: #c13584;"></i><h5 class="card-title mt-2">Promote on Social Media</h5><p>Create a post for Instagram or Pinterest to showcase your products.</p><button class="btn btn-outline-dark">Create Post</button></div></div></div>
+                     <div class="col-md-6"><div class="card h-100 product-card"><div class="card-body text-center"><i class="bi bi-envelope-paper-heart fs-1 text-primary"></i><h5 class="card-title mt-2">Email Announcement</h5><p>Send an email to your followers about new products or a special sale.</p><button class="btn btn-outline-dark">Send Email</button></div></div></div>
+                 </div>
+            </div>
+
+            <!-- ===================== PAGE: HELP CENTER ===================== -->
+            <div id="page-help" class="page-content">
+                 <div class="row g-4">
+                     <div class="col-lg-8"><div class="card"><div class="card-body"><h5 class="card-title">Frequently Asked Questions (FAQ)</h5><div class="accordion accordion-flush" id="faqAccordion"><div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">How do I get paid?</button></h2><div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion"><div class="accordion-body">Payouts are processed automatically every 15 days to your linked bank account. You can track all transactions in the Finance tab.</div></div></div><div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">How do shipping fees work?</button></h2><div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body">You can set your own shipping rates in the 'Settings' page under the Shipping tab. You can create different profiles for domestic and international shipping.</div></div></div></div></div></div></div>
+                     <div class="col-lg-4"><div class="card"><div class="card-body"><h5 class="card-title">Contact Support</h5><p>Can't find an answer? Our team is here to help.</p><form><div class="mb-2"><label class="form-label">Subject</label><input type="text" class="form-control"></div><div class="mb-2"><label class="form-label">Message</label><textarea class="form-control" rows="3"></textarea></div><button class="btn btn-primary w-100">Send Message</button></form></div></div></div>
+                 </div>
+            </div>
+
+            <!-- ===================== PAGE: SETTINGS ===================== -->
+            <div id="page-settings" class="page-content">
+                <div class="card">
+                    <div class="card-header"><ul class="nav nav-tabs card-header-tabs" id="settingsTabs"><li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#profile">Store Profile</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#shipping">Shipping</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#payouts">Payouts</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#security">Security</a></li></ul></div>
+                    <div class="card-body tab-content p-4">
+                        <div class="tab-pane active" id="profile"><form><div class="mb-3"><label class="form-label">Store Name</label><input type="text" class="form-control" value="Artisan Crafts Co."></div><div class="mb-3"><label class="form-label">Store Description</label><textarea class="form-control" rows="3">Unique, handcrafted goods made with love.</textarea></div><button class="btn btn-primary">Save Changes</button></form></div>
+                        <div class="tab-pane" id="shipping"><h6>Shipping Zones</h6><p>Set shipping rates for different regions.</p></div>
+                        <div class="tab-pane" id="payouts"><h6>Payout Method</h6><p>Your earnings will be sent to this account.</p><form><div class="mb-3"><label class="form-label">Bank Account Number</label><input type="text" class="form-control" value="**** **** **** 1234"></div><button class="btn btn-primary">Update Account</button></form></div>
+                        <div class="tab-pane" id="security"><h6>Change Password</h6><form><div class="mb-3"><label class="form-label">Current Password</label><input type="password" class="form-control"></div><div class="mb-3"><label class="form-label">New Password</label><input type="password" class="form-control"></div><button class="btn btn-primary">Set New Password</button></form></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom JavaScript with Dark Mode & Currency Logic -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- CONFIGURATION ---
+        const currencyConfig = {
+            'INR': { symbol: '₹', format: 'pre', locale: 'en-IN' },
+            'USD': { symbol: '$', format: 'pre', locale: 'en-US' },
+            'EUR': { symbol: '€', format: 'pre', locale: 'de-DE' },
+            'GBP': { symbol: '£', format: 'pre', locale: 'en-GB' },
+        };
+        let currentCurrency = localStorage.getItem('currency') || 'INR';
+        let salesChartInstance = null;
+        
+        // --- THEME & CURRENCY INITIALIZATION ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlEl = document.documentElement;
+        const currencySelectorMenu = document.getElementById('currency-selector-menu');
+        const currencySelectorBtn = document.getElementById('currency-selector-btn');
+
+        const applyTheme = (theme) => htmlEl.setAttribute('data-bs-theme', theme);
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+
+        // --- CORE FUNCTIONS ---
+        const formatCurrency = (value, currencyCode) => {
+            const config = currencyConfig[currencyCode];
+            const number = parseFloat(value);
+            if (isNaN(number)) return '';
+            const formattedNumber = new Intl.NumberFormat(config.locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
+            return config.format === 'pre' ? `${config.symbol}${formattedNumber}` : `${formattedNumber}${config.symbol}`;
+        };
+
+        const updateAllCurrencyDisplays = () => {
+            document.querySelectorAll('.formatted-currency').forEach(el => {
+                el.textContent = formatCurrency(el.dataset.value, currentCurrency);
+            });
+            document.querySelectorAll('.formatted-currency-plus').forEach(el => {
+                el.textContent = `+ ${formatCurrency(el.dataset.value, currentCurrency)}`;
+            });
+             document.querySelectorAll('.formatted-currency-minus').forEach(el => {
+                el.textContent = `- ${formatCurrency(el.dataset.value, currentCurrency)}`;
+            });
+            renderCharts();
+        };
+        
+        const renderCharts = () => {
+            if (salesChartInstance) {
+                salesChartInstance.destroy();
+            }
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            const gradient = salesCtx.createLinearGradient(0, 0, 0, 350);
+            gradient.addColorStop(0, 'rgba(79, 70, 229, 0.4)');
+            gradient.addColorStop(1, 'rgba(79, 70, 229, 0)');
+            
+            salesChartInstance = new Chart(salesCtx, {
+                type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'], datasets: [{ label: 'Sales', data: [12000, 19000, 15000, 25000, 21000, 30000, 28000, 42550], backgroundColor: gradient, borderColor: '#4f46e5', borderWidth: 3, fill: true, tension: 0.4, pointBackgroundColor: '#4f46e5', pointBorderColor: '#fff', pointHoverRadius: 6, pointRadius: 4, }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => formatCurrency(context.raw, currentCurrency) } } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: (value) => formatCurrency(value, currentCurrency).replace('.00','') } } } }
+            });
+        };
+
+        // --- EVENT LISTENERS ---
+        themeToggle.addEventListener('click', () => {
+            const newTheme = htmlEl.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+        });
+        
+        currencySelectorMenu.addEventListener('click', (e) => {
+            if (e.target.matches('[data-currency]')) {
+                e.preventDefault();
+                currentCurrency = e.target.dataset.currency;
+                localStorage.setItem('currency', currentCurrency);
+                currencySelectorBtn.innerHTML = e.target.innerHTML;
+                updateAllCurrencyDisplays();
+            }
+        });
+
+        // --- PAGE SWITCHING LOGIC ---
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        const pageContents = document.querySelectorAll('.page-content');
+        const pageTitle = document.getElementById('page-title');
+        const pageSubtitle = document.getElementById('page-subtitle');
+        const pageSubtitles = {
+            analytics: "Welcome back! Here's your performance overview.",
+            products: "Manage your beautiful products.",
+            orders: "View and process customer orders.",
+            finance: "Track your earnings, fees, and payouts.",
+            reviews: "Manage customer feedback and build trust.",
+            messages: "Communicate directly with your customers.",
+            coupons: "Create and manage discount codes for promotions.",
+            marketing: "Tools to promote your store and products.",
+            help: "Find answers or contact support.",
+            settings: "Configure your store, shipping, and payout details."
+        };
+        navLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetPage = this.getAttribute('data-page');
+                navLinks.forEach(l => l.classList.remove('active'));
+                pageContents.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('page-' + targetPage).classList.add('active');
+                pageTitle.textContent = this.textContent.replace(/(\d|Messages)/g, '').trim();
+                pageSubtitle.textContent = pageSubtitles[targetPage] || '';
+                if (window.innerWidth < 992) { document.querySelector('.sidebar').classList.toggle('active'); }
+            });
+        });
+        
+        document.getElementById('sidebar-toggle').addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('active'));
+
+        // --- INITIAL LOAD ---
+        currencySelectorBtn.innerHTML = currencySelectorMenu.querySelector(`[data-currency="${currentCurrency}"]`).innerHTML;
+        updateAllCurrencyDisplays();
+        $('#ordersTable, #financeTable').DataTable({ responsive: true, "bInfo": false, "lengthChange": false, "searching": false, "pageLength": 5 });
+    });
+    </script>
+</body>
+</html>
